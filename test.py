@@ -1,15 +1,23 @@
 import os
-import json
+import sys
 from azure.identity import ClientSecretCredential
 from azure.mgmt.compute import ComputeManagementClient
 from azure.mgmt.network import NetworkManagementClient
 
-# Set up environment variables for Azure authentication
-AZURE_CLIENT_ID = os.environ["AZURE_CLIENT_ID"]
-AZURE_CLIENT_SECRET = os.environ["AZURE_CLIENT_SECRET"]
-AZURE_TENANT_ID = os.environ["AZURE_TENANT_ID"]
-SUBSCRIPTION_ID = os.environ["AZURE_SUBSCRIPTION_ID"]
-RESOURCE_GROUP = os.environ["RESOURCE_GROUP"]
+# Function to get environment variables with error handling
+def get_env_var(var_name):
+    try:
+        return os.environ[var_name]
+    except KeyError:
+        print(f"Error: Environment variable {var_name} is not set.")
+        sys.exit(1)
+
+# Get environment variables for Azure authentication
+AZURE_CLIENT_ID = get_env_var("AZURE_CLIENT_ID")
+AZURE_CLIENT_SECRET = get_env_var("AZURE_CLIENT_SECRET")
+AZURE_TENANT_ID = get_env_var("AZURE_TENANT_ID")
+SUBSCRIPTION_ID = get_env_var("AZURE_SUBSCRIPTION_ID")
+RESOURCE_GROUP = get_env_var("RESOURCE_GROUP")
 
 # Authenticate using ClientSecretCredential
 credential = ClientSecretCredential(
