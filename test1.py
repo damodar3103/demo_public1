@@ -50,16 +50,6 @@ inventory = {
 for vm in result.data:
     vm_name = vm['name']
     host_vars = vm  # Start with all attributes from the result
-    tags = vm.get('tags', {})
-
-    # Flatten tags with nested keys
-    flattened_tags = {}
-    for key, value in tags.items():
-        if isinstance(value, dict):
-            for sub_key, sub_value in value.items():
-                flattened_tags[f"{key}.{sub_key}"] = sub_value
-        else:
-            flattened_tags[key] = value
 
     # Get VM IP address using Compute Management Client
     vm_id = vm['id']
@@ -68,9 +58,8 @@ for vm in result.data:
     nic = network_client.network_interfaces.get(RESOURCE_GROUP, nic_id)
     private_ip = nic.ip_configurations[0].private_ip_address
 
-    # Add IP address and flattened tags to host variables
+    # Add IP address to host variables
     host_vars['ansible_host'] = private_ip
-    host_vars.update(flattened_tags)
 
     # Add VM to inventory
     inventory["_meta"]["hostvars"][vm_name] = host_vars
