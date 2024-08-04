@@ -21,15 +21,15 @@ credential = ClientSecretCredential(
     tenant_id=AZURE_TENANT_ID
 )
 
-# Initialize the Compute and Resource Graph Clients
+# Initialize the Compute, Network, and Resource Graph Clients
 compute_client = ComputeManagementClient(credential, SUBSCRIPTION_ID)
 network_client = NetworkManagementClient(credential, SUBSCRIPTION_ID)
 resource_graph_client = ResourceGraphClient(credential)
 
-# Resource Graph query to get all VMs with their tags
+# Resource Graph query to get all VMs with their attributes
 query = QueryRequest(
     subscriptions=[SUBSCRIPTION_ID],
-    query="resources | where type == 'microsoft.compute/virtualmachines' | project id, name, tags"
+    query="resources | where type == 'microsoft.compute/virtualmachines'"
 )
 
 # Execute the query
@@ -49,6 +49,7 @@ inventory = {
 # Process VMs and create inventory
 for vm in result.data:
     vm_name = vm['name']
+    host_vars = vm  # Start with all attributes from the result
     tags = vm.get('tags', {})
 
     # Flatten tags with nested keys
@@ -67,11 +68,12 @@ for vm in result.data:
     nic = network_client.network_interfaces.get(RESOURCE_GROUP, nic_id)
     private_ip = nic.ip_configurations[0].private_ip_address
 
+    # Add IP address and flattened tags to host variables
+    host_vars['ansible_host'] = private_ip
+    host_vars.update(flattened_tags)
+
     # Add VM to inventory
-    inventory["_meta"]["hostvars"][vm_name] = {
-        "ansible_host": private_ip,
-        **flattened_tags
-    }
+    inventory["_meta"]["hostvars"][vm_name] = host_vars
     inventory["all"]["hosts"].append(vm_name)
 
 # Print the inventory as JSON for testing
