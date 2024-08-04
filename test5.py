@@ -78,6 +78,9 @@ for vm in result.data:
         # Add IP address to host variables
         host_vars['ansible_host'] = private_ip
     except Exception as e:
+        # Silently handle "Resource not found" errors and other exceptions
+        if "ResourceNotFound" in str(e):
+            continue
         print(f"Error fetching details for VM {vm_name}: {e}")
         continue
 
